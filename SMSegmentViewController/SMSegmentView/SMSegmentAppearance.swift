@@ -11,23 +11,19 @@ import UIKit
 open class SMSegmentAppearance {
     
     // PROPERTIES
-    open var segmentOnSelectionColour: UIColor
-    open var segmentOffSelectionColour: UIColor
+    open var segmentOnSelectionColour: UIColor {
+        didSet {
+            updateTouchDownBackgroundColor()
+        }
+    }
+    open var segmentOffSelectionColour: UIColor{
+        didSet {
+            updateTouchDownBackgroundColor()
+        }
+    }
     open var segmentTouchDownColour: UIColor {
         get {
-            var onSelectionHue: CGFloat = 0.0
-            var onSelectionSaturation: CGFloat = 0.0
-            var onSelectionBrightness: CGFloat = 0.0
-            var onSelectionAlpha: CGFloat = 0.0
-            self.segmentOnSelectionColour.getHue(&onSelectionHue, saturation: &onSelectionSaturation, brightness: &onSelectionBrightness, alpha: &onSelectionAlpha)
-            
-            var offSelectionHue: CGFloat = 0.0
-            var offSelectionSaturation: CGFloat = 0.0
-            var offSelectionBrightness: CGFloat = 0.0
-            var offSelectionAlpha: CGFloat = 0.0
-            self.segmentOffSelectionColour.getHue(&offSelectionHue, saturation: &offSelectionSaturation, brightness: &offSelectionBrightness, alpha: &offSelectionAlpha)
-            
-            return UIColor(hue: onSelectionHue, saturation: (onSelectionSaturation + offSelectionSaturation)/2.0, brightness: (onSelectionBrightness + offSelectionBrightness)/2.0, alpha: (onSelectionAlpha + offSelectionAlpha)/2.0)
+            return _segmentTouchDownColour
         }
     }
     
@@ -43,18 +39,15 @@ open class SMSegmentAppearance {
     
     
     // INITIALISER
-    public init() {
-        
-        self.segmentOnSelectionColour = UIColor.darkGray
-        self.segmentOffSelectionColour = UIColor.gray
-        
-        self.titleOnSelectionColour = UIColor.white
-        self.titleOffSelectionColour = UIColor.darkGray
-        self.titleOnSelectionFont = UIFont.systemFont(ofSize: 17.0)
-        self.titleOffSelectionFont = UIFont.systemFont(ofSize: 17.0)
-        self.titleGravity = SMSTitleGravity.right
-        
-        self.contentVerticalMargin = 5.0
+    public convenience init() {
+        self.init(contentVerticalMargin: 5.0,
+                  segmentOnSelectionColour: UIColor.darkGray,
+                  segmentOffSelectionColour: UIColor.gray,
+                  titleOnSelectionColour: UIColor.white,
+                  titleOffSelectionColour: UIColor.darkGray,
+                  titleOnSelectionFont: UIFont.systemFont(ofSize: 17.0),
+                  titleOffSelectionFont: UIFont.systemFont(ofSize: 17.0),
+                  titleGravity: .right)
     }
     
     public init(contentVerticalMargin: CGFloat, segmentOnSelectionColour: UIColor, segmentOffSelectionColour: UIColor, titleOnSelectionColour: UIColor, titleOffSelectionColour: UIColor, titleOnSelectionFont: UIFont, titleOffSelectionFont: UIFont, titleGravity: SMSTitleGravity?) {
@@ -73,6 +66,38 @@ open class SMSegmentAppearance {
             self.titleGravity = gravity
         } else {
             self.titleGravity = .right
+        }
+    }
+    
+    private func updateTouchDownBackgroundColor() {
+        _segmentTouchDownColour = segmentOnSelectionColour.mix(color: segmentOffSelectionColour)
+    }
+    
+    private var _segmentTouchDownColour: UIColor = UIColor.lightGray
+}
+
+extension UIColor {
+    func mix(color: UIColor) -> UIColor {
+        
+        let selfHue = self.hue
+        let inColorHue = color.hue
+        
+        return UIColor(hue: (selfHue.hue + inColorHue.hue)/2.0,
+                       saturation: (selfHue.saturation + inColorHue.saturation)/2.0,
+                       brightness: (selfHue.brightness + inColorHue.brightness)/2.0,
+                       alpha: (selfHue.alpha + inColorHue.alpha)/2.0)
+    }
+    
+    var hue: (hue: CGFloat, saturation: CGFloat, brightness: CGFloat, alpha: CGFloat) {
+        get {
+            var h: CGFloat = 0.0
+            var s: CGFloat = 0.0
+            var b: CGFloat = 0.0
+            var a: CGFloat = 0.0
+            
+            self.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+            
+            return (h, s, b, a)
         }
     }
 }

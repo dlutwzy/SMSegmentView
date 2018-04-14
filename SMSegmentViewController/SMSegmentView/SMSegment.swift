@@ -180,38 +180,80 @@ open class SMSegment: UIView {
     internal func setSelected(_ selected: Bool) {
         self.isSelected = selected
         if selected == true {
-            self.backgroundColor = self.appearance?.segmentOnSelectionColour
-            self.label.textColor = self.appearance?.titleOnSelectionColour
-            self.imageView.image = self.onSelectionImage
+            
+            UIView.animate(withDuration: SMSegment.INTERVAL_SELECTED_STATE_CHANGED) {
+                
+                self.backgroundColor = self.appearance?.segmentOnSelectionColour
+                self.label.textColor = self.appearance?.titleOnSelectionColour
+                self.imageView.image = self.onSelectionImage
+            }
         }
         else {
-            self.backgroundColor = self.appearance?.segmentOffSelectionColour
-            self.label.textColor = self.appearance?.titleOffSelectionColour
-            self.imageView.image = self.offSelectionImage
+            
+            UIView.animate(withDuration: SMSegment.INTERVAL_SELECTED_STATE_CHANGED) {
+                
+                self.backgroundColor = self.appearance?.segmentOffSelectionColour
+                self.label.textColor = self.appearance?.titleOffSelectionColour
+                self.imageView.image = self.offSelectionImage
+            }
         }
     }
     
     // MARK: Handle touch
     open override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if self.isSelected == false {
-            self.backgroundColor = self.appearance?.segmentTouchDownColour
-        }
+        
+        updateUI(touchesState: .began)
     }
     
     open override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if self.isSelected == false{
-            self.didSelectSegment?(self)
+        
+        if touches.count != 1 {
+            return
+        }
+        let point = ((touches as NSSet).allObjects[0] as! UITouch).location(in: self)
+        if point.x > self.frame.width ||
+            point.x < 0 ||
+            point.y > self.frame.height ||
+            point.y < 0 {
+            updateUI(touchesState: .cancel)
+        }
+        else {
+            updateUI(touchesState: .end)
         }
     }
     
     open override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if self.isSelected == false {
-            self.backgroundColor = self.appearance?.segmentOffSelectionColour
-        }
-        else {
+        
+        updateUI(touchesState: .cancel)
+    }
+    
+    private func updateUI(touchesState: TouchesState) {
+        switch touchesState {
+        case .began:
             if self.isSelected == false {
-                self.backgroundColor = self.appearance?.segmentOnSelectionColour
+                self.backgroundColor = self.appearance?.segmentTouchDownColour
+            }
+        case .end:
+            if self.isSelected == false{
+                self.didSelectSegment?(self)
+            }
+        case .cancel:
+            if self.isSelected == false {
+                self.backgroundColor = self.appearance?.segmentOffSelectionColour
+            }
+            else {
+                if self.isSelected == false {
+                    self.backgroundColor = self.appearance?.segmentOnSelectionColour
+                }
             }
         }
     }
+    
+    private enum TouchesState {
+        case began
+        case end
+        case cancel
+    }
+    
+    private static let INTERVAL_SELECTED_STATE_CHANGED: TimeInterval = 0.2
 }
